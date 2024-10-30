@@ -1,0 +1,214 @@
+{
+  "name": "Creating a AI Slack Bot with Google Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## This is a POST Webhook endpoint\n\nMake sure to configure this webhook using a https:// wraper and dont use the default http://localhost:5678 as that will not be recognized by your slack webhook\n\n\nOnce the data has been sent to your webhook, the next step will be passing it via an AI Agent to process data based on the queries we pass to our agent.\n\nTo have some sort of a memory, be sure to set the slack token to the memory node. This way you can refer to other chats from the history.\n\nThe final message is relayed back to slack as a new message. Since we can not wait longer than 3000 ms for slack response, we will create anew message with reference to the input we passed.\n\nWe can advance this using the tools or data sources for it to be more custom tailored for your company.\n",
+        "height": 490.24769122000794,
+        "width": 407.6388140161723
+      },
+      "id": "2ce91ec6-0a8c-438a-8a18-216001c9ee07",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "1",
+        "contextWindowLength": 10
+      },
+      "id": "fd1efd7c-7cd0-4edf-960e-19bd4567293e",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1260,
+        660
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "## Receive a POST webhook, process data and return response",
+        "height": 340.09703504043114,
+        "width": 561.423180592992,
+        "color": 4
+      },
+      "id": "186069c0-5c79-4738-9924-de33998658bc",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        840,
+        180
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "id": "bbe40125-1136-4c50-838e-41c08975bd79",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        660
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Nvc0UNplAOTXZDGa",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-bot",
+        "options": {
+          "responseData": "\"got it\""
+        }
+      },
+      "id": "cfcf2bbc-8ed5-4a9f-8f35-cf2715686ebe",
+      "name": "Webhook to receive message",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        880,
+        320
+      ],
+      "webhookId": "28b84545-96aa-42f5-990b-aa8783a320ca",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "b9c183b4-d324-4dcf-808d-21f61001d54b",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "You are Effibotics AI personal assistant. Your task will be to provide helpful assistance and advice related to automation and such tasks. "
+        }
+      },
+      "id": "dc93e588-fc0b-4561-88a5-e1cccd48323f",
+      "name": "Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1100,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "sendAndWait",
+        "user": {
+          "__rl": true,
+          "value": "U07U7RHE0E7",
+          "mode": "list",
+          "cachedResultName": "nick.kornienko"
+        },
+        "message": "Approve this message?"
+      },
+      "id": "3408a9b1-b5f3-4b9d-9cf3-92c64594e1d5",
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1500,
+        320
+      ],
+      "webhookId": "5f2d0079-ba58-407a-80dd-dd67f4f18936",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "bi4wPPU41HfwgHiH",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook to receive message": {
+      "main": [
+        [
+          {
+            "node": "Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9220b650-6e0b-4f9b-a5e9-3f887f6be202",
+  "meta": {
+    "templateId": "2370",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0389e68816e5d20f8d9def26b08c0de748359eee8ca867e53086bbc4687840ee"
+  },
+  "id": "twLvAzeXoe79C61j",
+  "tags": []
+}
